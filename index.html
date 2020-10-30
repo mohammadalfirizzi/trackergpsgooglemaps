@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+    <head>
+ 
+        <style>
+            #map {
+                height: 100%;
+            }
+ 
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+ 
+            #over_map {
+                position: absolute;
+                top: 10px;
+                left: 89%;
+                z-index: 99;
+                background-color: #ccffcc;
+                padding: 10px;
+            }
+        </style>
+    </head>
+ 
+    <body>
+        <div id="map"></div>
+ 
+        <div id="over_map">
+            <div>
+                <span>Live Tracking </span><span id="cars"></span>
+            </div>
+        </div>
+         
+         
+ 
+        <!-- jQuery CDN -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <!-- Firebase -->
+        <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+        <script>
+            // Replace your Configuration here..
+            var config = {
+                apiKey: "AIzaSyBvHcb-Nel_Fv-Bmlh5JXcFWcg1AXECsrQ",
+                authDomain: "tutorteknikiotcovid.firebaseapp.com",
+                databaseURL: "https://tutorteknikiotcovid.firebaseio.com",
+                projectId: "tutorteknikiotcovid",
+                storageBucket: "tutorteknikiotcovid.appspot.com",
+                messagingSenderId: "718214327630",
+                appId: "1:718214327630:web:5173d7150ad284c58a421f"
+            };
+            firebase.initializeApp(config);
+        </script>
+ 
+        <script>
+ 
+            // counter for online cars...
+            var cars_count = 0;
+            // markers array to store all the markers, so that we could remove marker when any car goes offline and its data will be remove from realtime database...
+            var markers;
+            var map;
+            function initMap() { // Google Map Initialization... 
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 8,
+                    center: new google.maps.LatLng(23.034, 74.56),
+                    mapTypeId: 'terrain'
+                });
+            }
+ 
+             
+             function ShowLocation(lat,lng,suhu) {
+                 
+            if(markers!=null){
+                markers.setMap(null);
+            }
+             var contentString = "Suhu Tubuh Anda "+suhu+"\xB0"+"C";
+             var infowindow = new google.maps.InfoWindow({
+    content: contentString,
+    position: uluru
+});
+ 
+                var uluru = { lat: lat, lng: lng };
+ 
+                var marker = new google.maps.Marker({
+                    position: uluru,
+                    title:'Live Location',
+                    map: map
+                });
+                marker.addListener('click', function() {
+          // tampilkan info window di atas marker
+          infowindow.open(map, marker);
+        });
+                map.setZoom(17);
+                map.panTo(marker.position);
+                markers = marker; // add marker 
+
+            }
+
+
+ 
+ 
+            // get firebase database reference.
+            var loc_ref= firebase.database().ref("locations");
+    //------------------------------------------------------------------------------------
+            loc_ref.on('value',gotData,errData);
+            var curr_lat; var curr_lng;
+            function gotData(data){
+                // console.log(data.val());
+                var locations= data.val();
+                // var user_id = getUrlParameter('id');
+                // console.log("user_id is: "+user_id);
+                console.log(locations.suhu);
+                suhu = locations.suhu;
+                curr_lat=locations.latitude;
+                curr_lng=locations.longitude;
+                console.log("current_latitude:"+parseFloat(curr_lat)+" && current_longitude: " +parseFloat(curr_lng));
+                ShowLocation(parseFloat(curr_lat),parseFloat(curr_lng),suhu.toString());
+            }
+ 
+            function errData(err){
+                console.log('error: '+err);
+            }
+    //---------------------------------------------------------------------------------------
+        var getUrlParameter = function getUrlParameter(sParam) {
+            var sPageURL = window.location.search.substring(1),
+                sURLVariables = sPageURL.split('&'),
+                sParameterName,
+                i;
+ 
+            for (i = 0; i < sURLVariables.length; i++) {
+                sParameterName = sURLVariables[i].split('=');
+ 
+                if (sParameterName[0] === sParam) {
+                    return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+                }
+            }
+        };
+ 
+        </script>
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRRLVoL8Rq6p7xOtcLrmm4NVaivR2olQQ&callback=initMap">
+        </script>
+ 
+    </body>
+</html>
